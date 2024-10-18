@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Applications Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #008080;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+
+        .summary {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .summary div {
+            background-color: #e0f7fa;
+            border: 1px solid #008080;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            width: 30%;
+            text-align: center;
+            font-size: 1.5rem;
+            color: #008080;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .summary div:hover {
+            transform: scale(1.03);
+            box-shadow: 0px 4px 15px rgba(0, 128, 128, 0.4);
+        }
+
+        .details {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        canvas {
+            margin-top: 30px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+        function loadApplicationStats() {
+            // Fetch application statistics from the server
+            fetch('http://localhost:8080/api/applications/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Display the statistics
+                    document.getElementById("totalApplications").innerText = data.totalApplications;
+                    document.getElementById("acceptedApplications").innerText = data.acceptedApplications;
+                    document.getElementById("rejectedApplications").innerText = data.rejectedApplications;
+                    document.getElementById("underReviewApplications").innerHTML = data.underReviewApplications;
+
+                    // Render Pie Chart
+                    renderChart(data.acceptedApplications, data.rejectedApplications, data.underReviewApplications);
+
+                    // Add click event listeners to display details
+                
+                })
+                .catch(error => console.error("Error fetching application stats:", error));
+        }
+
+        function showDetails(index) {
+            const details = document.querySelector('.details');
+            const titles = ['Total Applications Details', 'Accepted Applications Details', 'Rejected Applications Details'];
+
+            details.innerHTML = `<h2>${titles[index]}</h2><p>Details about ${titles[index].toLowerCase()}</p>`;
+            details.style.display = 'block';
+        }
+
+        function renderChart(accepted, rejected, underReview) {
+            const ctx = document.getElementById('applicationsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Accepted', 'Rejected', 'Under Review'],
+                    datasets: [{
+                        label: 'Job Applications',
+                        data: [accepted, rejected, underReview],
+                        backgroundColor: ['#4caf50', '#f44336', '#ffeb3b'],
+                        borderColor: ['#357a38', '#ba000d', '#c8b900'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.label + ': ' + tooltipItem.raw;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load the stats on page load
+        window.onload = loadApplicationStats;
+    </script>
+</head>
+<body>
+    <h1>Job Applications Summary</h1>
+    <div class="summary">
+        <div>
+            <h3>Total Applications</h3>
+            <p id="totalApplications">0</p>
+        </div>
+        <div>
+            <h3>Accepted Applications</h3>
+            <p id="acceptedApplications">0</p>
+        </div>
+        <div>
+            <h3>Rejected Applications</h3>
+            <p id="rejectedApplications">0</p>
+        </div>
+        <div>
+            <h3>Under Review Application</h3>
+            <p id="underReviewApplications">0</p>
+        </div>
+    </div>
+
+    <div class="details"></div>
+
+    <canvas id="applicationsChart" width="400" height="400"></canvas>
+</body>
+</html>
